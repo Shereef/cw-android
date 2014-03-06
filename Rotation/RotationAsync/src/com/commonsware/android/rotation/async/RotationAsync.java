@@ -49,13 +49,6 @@ public class RotationAsync extends Activity {
 	}
   }
   
-  @Override
-  public Object onRetainNonConfigurationInstance() {
-    task.detach();
-    
-    return(task);
-  }
-  
   void updateProgress(int progress) {
     bar.setProgress(progress);
   }
