@@ -15,6 +15,8 @@
 package com.commonsware.android.rotation.async;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -32,21 +34,19 @@ public class RotationAsync extends Activity {
     setContentView(R.layout.main);
     
     bar=(ProgressBar)findViewById(R.id.progress);
-    
-    task=(RotationAwareTask)getLastNonConfigurationInstance();
-    
-    if (task==null) {
-      task=new RotationAwareTask(this);
-      task.execute();
-    }
-    else {
-      task.attach(this);
-      updateProgress(task.getProgress());
-    
-      if (task.getProgress()>=100) {
-        markAsDone();
-      }
-    }
+	final FragmentManager fm = getFragmentManager();
+	taskFragment = (TaskFragment) fm.findFragmentByTag("task");
+	if (taskFragment == null) {
+		task=new RotationAwareTask(this);
+		task.execute();
+	} else {
+		task.attach(this);
+		updateProgress(task.getProgress());
+		
+		if (task.getProgress()>=100) {
+			markAsDone();
+		}
+	}
   }
   
   @Override
@@ -115,4 +115,34 @@ public class RotationAsync extends Activity {
       return(progress);
     }
   }
+  	public static class TaskFragment extends Fragment {
+
+		// data object we want to retain
+		private RotationAwareTask	task;
+
+		public RotationAwareTask getTask() {
+			return task;
+		}
+
+		// this method is only called once for this fragment
+		@Override
+		public void onCreate(final Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			// retain this fragment
+			setRetainInstance(true);
+		}
+
+		public void setTask(final RotationAwareTask task) {
+			this.task = task;
+		}
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		// store the data in the fragment
+		taskFragment.setTask(task);
+		task.detach();
+	}
+
 }
